@@ -12,6 +12,8 @@ Snaker is a Python based simple url shortner the Django framework.
 
 ## Usage
 
+1-1 ) download snaker application and install
+
 1) download the package
 
 2) vi ~/snaker/snaker/settings.py to change each values (*specific information will be bellow)
