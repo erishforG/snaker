@@ -1,0 +1,26 @@
+    language: python # => 1
+
+    python: # => 2
+
+      - "3.6"
+
+    services: # => 3
+
+      - mysql
+
+    env: # => 4
+
+      -DJANGO=2.0 DB=mysql
+    install: # => 5
+
+      - pip install -r requirements.txt
+
+    before_script: # => 6
+      - export DJANGO_SETTINGS_MODULE=snaker.settings
+      - export PYTHONPATH=$HOME/builds/erishforG/snaker
+      - export PIP_USE_MIRRORS=true
+
+      - mysql -e 'create database test;' -u root
+    script: # => 7
+
+      - python manage.py test
