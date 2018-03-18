@@ -34,7 +34,7 @@ BASE_DESCRIPTION = base site description
 
 BASE_IMAGE = base site image
 
-###redirect information
+### redirect information
 1) REDIRECT_IMAGE = redirect page base image
 
 2) REDIRECT_THUMBNAIL = redirect page thumbnail logo below REDIRECT_IMAGE
