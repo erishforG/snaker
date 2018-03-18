@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- head -->
+    <head>
+        {% load staticfiles %}
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="{{ settings.BASE_TITLE }}">
+
+        <meta property="og:title" content="{{ settings.BASE_TITLE }}" />
+        <meta property="og:type" content="article" />
+        <meta property="og:description" content="{{ settings.BASE_DESCRIPTION }}" />
+        <meta property="og:image" content="{{ settings.BASE_IMAGE }}" />
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    	<link rel="stylesheet" href="{% static "css/paper.css" %}">
+        <link rel="stylesheet" href="{% static "css/default.css" %}">
+
+        <style>
+        body {
+            padding-top: 70px;
+        }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/clipboard.js/1.5.3/clipboard.min.js"></script>
+        <script src="{% static 'js/default.js' %}"></script>
+        <title>{{ settings.BASE_TITLE }}</title>
+    </head>
+    <body>
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#top-navbar-collapse">
+                        <span class="sr-only">Menu</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/urls?page=1">ADMIN</a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="top-navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/urls?page=1">URL</a>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="/admin/logout">Sign out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- body -->
+        <div class="container">
+            <div class="col-md-12 col-sm-12">
+                <div class="page-header">
+                    <h3>{{ settings.BASE_TITLE }} url list</h3>
+                </div>
+            </div>
+
+            <div>
+                <div class="row">
+                    <div class="search-tag">
+                        <button onclick="addTag(1);" class="category btn1"></button>
+                        <button onclick="addTag(2);" class="category btn2"></button>
+                        <button onclick="addTag(3);" class="category btn3"></button>
+                        <button onclick="addTag(4);" class="category btn4"></button>
+                        <button onclick="addTag(5);" class="category btn5"></button>
+                        <button onclick="addTag(6);" class="category btn6"></button>
+                        <button onclick="addTag(7);" class="category btn7"></button>
+                        <button onclick="addTag(8);" class="category btn8"></button>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1 col-sm-1">
+
+                    </div>
+                    <div class="col-md-12 col-sm-12">
+                        <a class="btn btn-default pull-left" href="/urls?page=1" role="button">Whole</a>
+                        <a class="btn btn pull-right" href="/urls/create/" role="button">Create</a>
+                        <a class="btn btn-default pull-right" href="download/" role="button">Download</a>
+                    </div>
+                </div>
+                <div class="table-responsive col-md-12 col-sm-12" id="table-container">
+                    <table class="table table-hover" class="col-md-12 col-sm-12">
+                        <thead>
+                            <tr>
+                                <th>
+                                    #
+                                </th>
+                                <th>
+                                    URL
+                                </th>
+                                <th>
+                                    TITLE
+                                </th>
+                                <th>
+                                    CLICK
+                                </th>
+                                <th>
+                                    TYPE
+                                </th>
+                                <th>
+                                    CREATED_AT
+                                </th>
+                                <th>
+                                    -
+                                </th>
+                                <th>
+                                    TAG
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for url in urls %}
+                                <tr href="{{ url.hash }}/info/">
+                                    <td>
+                                        {{ url.id }}
+                                    </td>
+                                    <td>
+                                        <a href="/{{ url.hash }}" id="shortner_link">http://{{ settings.BASE_URL }}/{{ url.hash }}</a>
+                                        <button class="btn-primary clipboard" data-clipboard-text="http://{{ settings.BASE_URL }}/{{ url.hash }}">
+                                            <img src="{% static 'images/copy_icon.png' %}">
+                                        </button>
+                                    </td>
+                                    <td>
+                                        {{ url.title }}
+                                    </td>
+                                    <td>
+                                        {{ url.count }}
+                                    </td>
+                                    <td>
+                                        {% if url.type == 0 %}
+                                            redirect
+                                        {% else %}
+                                            iframe
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ url.created_at|date:"Y-m-d" }}
+                                    </td>
+                                    <td>
+                                        <a href="/urls/{{ url.hash }}/info/">info</a>
+                                    </td>
+                                    <td width=100>
+                                        <div class="tag-box" value="{{ url.id }}">
+                                            {% if url.tags_to_bool_array|length < 1 %}
+                                                <div class="add-tag-box">
+                                                    <img class="add-tag-icon" src="{% static 'images/add_tag.png' %}" alt="">
+                                                </div>
+                                            {% else %}
+                                                {% for i in url.tags_to_bool_array %}
+                                                    <button class="category btn{{ i }}"></button>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </div>
+        <ul class="pagination" id="page_btns">
+            <li><a href="/urls?page=1"><<</a></li>
+            {% for n in list_range %}
+                {% if n == page %}
+                    <li><a class="active" href="javascript:changePage({{ n }});">{{ n }}</a></li>
+                {% else %}
+                    <li><a href="javascript:changePage({{ n }});">{{ n }}</a></li>
+                {% endif %}
+            {% endfor %}
+            <li><a href="javascript:changePage({{ last_page }})">>></a></li>
+        </ul>
+        <div id="select-tag-box" style="display:block;">
+            <div class="triangle"></div>
+            <div id="select-tag">
+                <button class="select-category btn{{ counter }}"></button>
+            </div>
+        </div>
+    </body>
+    <script>
+        $(document).ready(function() {
+            $(".tag-box").mousedown(function(e){
+                id = $(this)[0].getAttribute('value');
+                $('body').find('.current').removeClass('current');
+                $(this).addClass('current');
+                getURL(id, $(this));
+            });
+
+            $(document).mousedown(function(e) {
+                var box = $('#select-tag-box');
+                if(box.has(e.target).length == 0)
+                    box.html("");
+        	});
+
+
+        })
+
+        var getURL = function(id) {
+            var selectedCell = $('.current').first()
+
+            $.ajax({
+                type: 'GET',
+                url: '/url/detail?id=' + id,
+                data: {id : id},
+                dataType: "html",
+                success: function(result) {
+                        var json = JSON.parse(result);
+
+                        var categories = json["tags"];
+                        if(categories){
+                            createTagSelectView(id, categories.split(","));
+                        } else {
+                            createTagSelectView(id, []);
+                        }
+                    }
+                });
+        }
+
+        var createTagSelectView = function(id, categories) {
+            var selectedCell = $('.current').first()
+            var htmlStr = '<div class="triangle"></div>' +
+                        '<div id="select-tag">';
+
+            for(var i=1;i<9;i++) {
+                var check = categories.indexOf(String(i)) != -1;
+                var selected = check ? "selected" : ""
+
+                htmlStr += '<button onclick="updateTag(' + id + ', ' + i + ')" class="select-category btn' + i + " " + selected + '"></button>';
+            }
+            document.getElementById("select-tag-box").innerHTML = htmlStr
+
+            htmlStr += "</div>";
+
+            updateCellTag(id, categories);
+            if (!selectedCell) {
+                return
+            }
+
+            var position = selectedCell.offset()
+            var height = selectedCell.height()
+            var width = selectedCell.width()
+
+            $("#select-tag-box").css( { left: position.left - (width / 2), top: position.top + height } );
+        }
+
+        var updateTag = function(id, tag) {
+            $.ajax({
+                type: 'POST',
+                url: '/url/detail/?id=' + id + '&tag=' + tag,
+                data: {id : id, tag : tag},
+                dataType: "json",
+                success: function(result) {
+                        var categories = result["tags"];
+                        if(categories){
+                            createTagSelectView(id, categories.split(","));
+                        } else {
+                            createTagSelectView(id, []);
+                        }
+                    }
+                });
+        }
+
+        var updateCellTag = function(id, categories) {
+            var selectedCell = $('.current').first()
+            var htmlStr = ""
+            if(categories.length < 1) {
+                 htmlStr = '<div class="add-tag-box">' +
+                    '<img class="add-tag-icon" src="{% static "images/add_tag.png" %}" alt="">' +
+                    '</div>'
+            } else {
+                for(var i=0;i<categories.length;i++) {
+                    htmlStr += '<button class="category btn' + categories[i] + '"></button>';
+                }
+            }
+            selectedCell.html(htmlStr);
+        }
+
+        function insertParam(key, value) {
+            key = encodeURI(key); value = encodeURI(value);
+
+            var kvp = document.location.search.substr(1).split('&');
+
+            var i=kvp.length; var x; while(i--)
+            {
+                x = kvp[i].split('=');
+
+                if (x[0]==key)
+                {
+                    x[1] = value;
+                    kvp[i] = x.join('=');
+                    break;
+                }
+            }
+
+            if(i<0) {kvp[kvp.length] = [key,value].join('=');}
+
+            //this will reload the page, it's likely better to store this until finished
+            removeSpaceInArray(kvp);
+            document.location.search = kvp.join('&');
+        }
+
+        var GetParamUrl = function(_k) {// get parameter by key
+
+            let sPageURL = decodeURIComponent(window.location.search.substr(1)),
+                sURLVariables = sPageURL.split('&').map(_v => _v.split('='));
+            let _result = sURLVariables.find(_v => _v[0] === _k);
+            if(_result) { return _result[1] }
+            else { return "" };
+
+        };
+
+        var addTag = function(num) {
+            var tags = GetParamUrl('tags');
+            array = tags.split(",");
+
+            if(array.indexOf(String(num)) == -1) {
+                removeSpaceInArray(array);
+                array.push(num);
+                array.sort();
+                str = array.join(",");
+                insertParam('tags', str);
+            } else {
+                index = array.indexOf(String(num));
+                array.splice(index, 1);
+                array.sort();
+                str = array.join(",");
+                insertParam('tags', str);
+            }
+        }
+
+        var removeSpaceInArray = function(array) {
+            while(!array.indexOf("")) {
+                var index = array.indexOf("");
+                array.splice(index, 1);
+            }
+            return array;
+        }
+
+        var changePage = function(num) {
+            insertParam('page', num);
+        }
+    </script>
+    <footer>
+        <div align="center">&copy; Copyright 2018, erish</div>
+    </footer>
+</html>

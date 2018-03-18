@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- head -->
+    <head>
+        {% load staticfiles %}
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="<%= description  %>">
+
+        <!-- for Facebook -->
+        <meta property="og:title" content="{{ settings.BASE_TITLE }}" />
+        <meta property="og:type" content="article" />
+        <meta property="og:description" content="{{ settings.BASE_DESCRIPTION }}" />
+        <meta property="og:image" content="{{ settings.BASE_IMAGE }}" />
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="{% static "css/default.css" %}">
+    	<link rel="stylesheet" href="{% static "css/paper.css" %}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.35.3/css/bootstrap-dialog.css"  type="text/css" />
+
+        <style>
+        body {
+            padding-top: 70px;
+        }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.35.3/js/bootstrap-dialog.js"></script>
+
+        <style>
+            #recaptcha {
+                margin-top: 20px;
+            }
+        </style>
+
+        <script>
+            $(document).ready(function() {
+                $("#url_submit").click(function(e) {
+                    var hash		= $("#hash_url").val();
+                    var title		= $("#title").val();
+                    var description	= $("#description").val();
+                    var utm_value	= $(":radio[name='utm_type']:checked").val();
+                    var type_value	= $(":radio[name='url_type']:checked").val();
+                    var show_loading = $("#show_loading:checked").val() == 'on' ? 1 : 0;
+
+                    if (title.length < 1) {
+                        title = "{{ settings.BASE_TITLE }}";
+                    }
+
+                    var links 		= new Array();
+
+                    {% for media in medias %}
+                        var link = new Object();
+
+                        link.media_id = {{ media.id }};
+                        link.link = $("#url-link-{{ media.name }}").val();
+                        links.push(link);
+                    {% endfor %}
+
+                    var params = {
+                                    hash: 				hash,
+                                    title: 				title,
+                                    utm: 				utm_value,
+                                    type: 				type_value,
+                                    description: 		description,
+                                    show_redirection: 	show_loading,
+                                    links: 				links,
+                                    size_of_links:      links.length
+                                };
+
+                    $.post("/urls/create/", params)
+                        .done(function(data) {
+                            var link = location.host
+
+                            if(link.indexOf('http') == -1)
+                                link = 'http://' + link
+
+                            window.location.replace(link + '/urls/');
+                        })
+
+                        .fail(function(xhr, textStatus, errorThrown) {
+                            alert(xhr.responseText);
+                        });
+                });
+            });
+        </script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                {% if url.type == 0 %}
+                    $("show-redirection-container").show();
+                    $("banner-select-container").hide();
+                {% else %}
+                    $("banner-select-container").show();
+                    $("show-redirection-container").hide();
+                {% endif %}
+
+                $('input[type=radio][name=url_type]').change(function() {
+                    if (this.value == 0) {
+                        $('#show-redirection-container').show();
+                        $('#banner-select-container').hide();
+                    } else if (this.value == 1) {
+                        $('#show-redirection-container').hide();
+                        $('#banner-select-container').show();
+                    }
+                });
+            });
+        </script>
+
+        <title>{{ settings.BASE_TITLE }}</title>
+    </head>
+
+    <body>
+        <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#top-navbar-collapse">
+                        <span class="sr-only">Menu</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/urls?page=1">ADMIN</a>
+                </div>
+
+                <div class="collapse navbar-collapse" id="top-navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li>
+                            <a href="/urls?page=1">URL</a>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="/admin/logout">Sign out</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- body -->
+        <div class="col-md-12 col-sm-12">
+            <div class="page-header">
+                <h3>{{ settings.BASE_TITLE }} url create</h3>
+            </div>
+        </div>
+
+        <div class="col-md-12 col-sm-12">
+            <form class="form-horizontal col-md-12" role="form" id="create_form">
+                <div class="form-group" id="hash-form-container">
+                    <label for="hash_url" class="col-sm-2 control-label">hash</label>
+                    <div class="col-sm-9">
+                        http://{{ settings.BASE_URL }}/<input type="text" id="hash_url" name="hash_url" placeholder="{{ hash }}" value="{{ hash }}" />
+                    </div>
+                </div>
+
+                <div class="form-group" id="url-form-container">
+                    {% for media in medias %}
+                        <label for="url-link-{{ media.name }}" class="col-sm-2 control-label">{{ media.shown_name }}</label>
+                        <div class="col-sm-9">
+                            <input type="text" class="form-control" id="url-link-{{ media.name }}" name="url-link-{{ media.name }}" placeholder="{{ media.shown_name }}용 URL을 입력해주세요."
+                            {% for link in links %}
+                                {% if link.media_id == media.id %}
+                                    value={{ link.link }}
+                                {% endif %}
+                            {% endfor %} >
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group" id="title-form-container">
+                    <label for="title" class="col-sm-2 control-label">title</label>
+                    <div class="col-sm-9">
+                        <input type="text" class="form-control" id="title" name="title" placeholder="URL title을 입력해주세요. (기본값: {{ settings.BASE_URL }})" value={{ url.title }}>
+                    </div>
+                </div>
+
+                <div class="form-group" id="detailContainer">
+                    <label for="description" class="col-sm-2 control-label">description<br/>(optional)</label>
+                    <div class="col-sm-9">
+                        <textarea class="form-control" rows="3" id="description" name="description"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group" id="utm-type-container">
+                    <label class="col-sm-2 control-label">utm</label>
+                    <div class="col-sm-9">
+                        <label class="form-control" >
+                            <input type="radio" id="utm_type_false" name="utm_type" value="0" /> delete UTM
+                        </label>
+                        <label class="form-control" >
+                            <input type="radio" id="utm_type_true" name="utm_type" value="1" checked/> ADD UTM
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="url-type-container">
+                    <label class="col-sm-2 control-label">type</label>
+                    <div class="col-sm-9">
+                        <label class="form-control" >
+                            <input type="radio" id="url_type_redirect" name="url_type" value="0" checked/> redirect
+                        </label>
+                        <label class="form-control" >
+                            <input type="radio" id="url_type_iframe" name="url_type" value="1" /> iframe
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="show-redirection-container">
+                    <label class="col-sm-2 control-label">show loading</label>
+                    <div class="col-sm-9">
+                        <label class="col-sm-12 col-md-12 form-control">
+                            <input type="checkbox" id="show_loading" checked/> show loading page
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                        <button type="button" class="btn btn-default pull-right" id="url_submit" onclick="submit_function()">CREATE</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </body>
+    <footer>
+        <div align="center">&copy; Copyright 2018, erish</div>
+    </footer>
+</html>

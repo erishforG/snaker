@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <!-- head -->
+    <head>
+        {% load staticfiles %}
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="<%= description  %>">
+
+        <!-- for Facebook -->
+        <meta property="og:title" content="{{ settings.BASE_TITLE }}" />
+        <meta property="og:type" content="article" />
+        <meta property="og:description" content="{{ settings.BASE_DESCRIPTION }}" />
+        <meta property="og:image" content="{{ settings.BASE_IMAGE }}" />
+
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href = "{% static 'css/paper.css' %}"/>
+        <link rel="stylesheet" type="text/css" href = "{% static 'css/default.css' %}"/>
+
+        <style>
+        body {
+            padding-top: 70px;
+        }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $("#login_button").click(function(e){
+                    e.preventDefault();
+                    var id = $("#Id").val();
+                    var password = $("#Password").val();
+                    var params = {
+                        id : id,
+                        password: password
+                    }
+
+                    $.post("/admin/login/", params)
+                        .done(function(data) {
+                            var link = location.host
+
+                            if(link.indexOf('http') == -1)
+                                link = 'http://' + link
+
+                            window.location.replace(link + '/urls?page=1');
+                        })
+
+                        .fail(function(xhr, textStatus, errorThrown) {
+                            alert(xhr.responseText);
+                        });
+                });
+            });
+	    </script>
+
+        <title>{{ settings.BASE_TITLE }}</title>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 col-md-4 col-md-offset-4">
+                    <h1 class="text-center login-title">snaker</h1>
+                    <div class="account-wall">
+                        <form class="form-signin">
+                            <input type="text" class="form-control" placeholder="Id" name="Id" id="Id" required autofocus>
+                            <input type="password" class="form-control" placeholder="Password" name="Password" id="Password" required>
+                            <button class="btn btn-lg btn-primary btn-block" type="submit" id="login_button">Log in</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <footer>
+        <div align="center">&copy; Copyright 2018, erish</div>
+    </footer>
+</html>

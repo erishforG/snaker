@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% load staticfiles %}
+        <title>{{ title }}</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- for Facebook -->
+        <meta property="og:title" content="여기를 눌러 이동하세요" />
+        <meta property="og:type" content="article" />
+        <meta property="og:description" content="{{ settings.BASE_DESCRIPTION }}" />
+        <meta property="og:image" content="{{ settings.BASE_IMAGE }}" />
+        <meta http-equiv="refresh" content="{{ settings.REDIRECT_TIME }}; url={{ long_url }}" />
+
+        <style type="text/css">
+            @import url(http://fonts.googleapis.com/earlyaccess/notosanskr.css);
+
+            body {
+                font-family: 'Noto Sans KR', sans-serif;
+                margin: 0;
+                padding: 0;
+                background-color: black;
+            }
+
+
+            #content-container {
+                text-align: center;
+            }
+
+            #image_container {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                width: 300px;
+                height: 300px;
+                margin-top: -200px;
+                margin-left: -150px;
+                overflow: hidden;
+            }
+            #redirect_image {
+                margin-left: 10%;
+                position: absolute;
+                width: auto;
+                height: 100%;
+            }
+            #app_logo {
+                position: absolute;
+                height: 42px;
+                width: 30px;
+                bottom: 130px;
+                left: 50%;
+                margin-left: -15px;
+                align-content: center;
+            }
+            #move {
+                color: white;
+                position: absolute;
+                width: 100%;
+                text-align: center;
+                bottom: 100px;
+                font-weight:100;
+            }
+
+            @media only screen
+            and (min-device-width : 320px)
+            and (max-device-width : 350px) {
+            /* Styles */
+                #image_container {
+                    width: 250px;
+                    height: 250px;
+                    margin-top: -160px;
+                    margin-left: -125px;
+                }
+                #app_logo {
+                    height: 30px;
+                    width: 22px;
+                    bottom: 80px;
+                    margin-left: -11px;
+                }
+                #move {
+                    bottom: 55px;
+                    font-size: 13px;
+                }
+            }
+
+            @media only screen
+            and (min-device-width : 320px)
+            and (max-device-width : 350px)
+            and (orientation:landscape) {
+                #image_container {
+                    width: 170px;
+                    height: 170px;
+                    margin-top: -100px;
+                    margin-left: -85px;
+                }
+                #app_logo {
+                    height: 25px;
+                    width: 17px;
+                    bottom: 80px;
+                    margin-left: -8.5px;
+                }
+                #move {
+                    bottom: 55px;
+                    font-size: 13px;
+                }
+            }
+
+            @media only screen
+            and (min-device-width : 350px)
+            and (max-device-width : 400px) {
+            /* Styles */
+                #image_container {
+                    width: 300px;
+                    height: 300px;
+                    margin-top: -200px;
+                    margin-left: -150px;
+                }
+            }
+
+            @media only screen
+            and (min-device-width : 350px)
+            and (max-device-width : 400px)
+            and (orientation:landscape) {
+                #image_container {
+                    width: 220px;
+                    height: 220px;
+                    margin-top: -160px;
+                    margin-left: -110px;
+                }
+                #app_logo {
+                    height: 25px;
+                    width: 17px;
+                    bottom: 100px;
+                    margin-left: -8.5px;
+                }
+                #move {
+                    bottom: 75px;
+                    font-size: 13px;
+                }
+            }
+
+            @media only screen
+            and (min-device-width: 400px){
+                #image_container {
+                    width: 350px;
+                    height: 350px;
+                    margin-top: -220px;
+                    margin-left: -175px;
+                }
+            }
+
+            @media only screen
+            and (min-device-width : 400px)
+            and (orientation:landscape) {
+                #image_container {
+                    width: 220px;
+                    height: 220px;
+                    margin-top: -160px;
+                    margin-left: -110px;
+                }
+                #app_logo {
+                    height: 25px;
+                    width: 17px;
+                    bottom: 85px;
+                    margin-left: -8.5px;
+                }
+                #move {
+                    bottom: 60px;
+                    font-size: 13px;
+                }
+            }
+
+            /* iPads (portrait and landscape) ----------- */
+            @media only screen
+            and (min-device-width : 768px)
+            and (max-device-width : 1024px) {
+            /* Styles */
+                #image_container {
+                    width: 500px;
+                    height: 500px;
+                    margin-top: -300px;
+                    margin-left: -250px;
+                }
+            }
+
+            /* Desktops and laptops ----------- */
+            @media only screen
+            and (min-width : 1224px) {
+            /* Styles */
+                #image_container {
+                    width: 700px;
+                    height: 700px;
+                    margin-top: -350px;
+                    margin-left: -350px;
+                }
+            }
+
+            /* Large screens ----------- */
+            @media only screen
+            and (min-width : 1824px) {
+            /* Styles */
+                /*#player {*/
+                    /*position: absolute;*/
+                    /*top: 50%;*/
+                    /*left: 50%;*/
+                    /*width: 800px;*/
+                    /*height: 800px;*/
+                    /*margin-top: -400px;*/
+                    /*margin-left: -400px;*/
+                /*}*/
+            }
+
+        </style>
+    </head>
+    <body>
+        <div id="image_container">
+            <img id="redirect_image" src="{{ settings.REDIRECT_IMAGE }}" alt="">
+        </div>
+        <img id="app_logo" src="{{ settings.REDIRECT_THUMBNAIL }}" alt="">
+        <span id="move">moving...</span>
+    </body>
+    <footer>
+        <div align="center">&copy; Copyright 2018, erish</div>
+    </footer>
+</html>
