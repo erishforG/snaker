@@ -65,6 +65,7 @@ choose your database and set your name, host, id, pw and etc.
 @erishforG 
 @musalys
 @wangseung
+@codingbowoo
 
 ### how to contribute
 
