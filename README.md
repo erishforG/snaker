@@ -5,7 +5,7 @@
 
 ![snaker_image](https://github.com/erishforG/snaker/blob/master/server_image.jpeg)
 
-Snaker is a Python based simple url shortner the Django framework.
+Snaker is a Python based simple url shortener the Django framework.
 
 ## Compatibility
 
