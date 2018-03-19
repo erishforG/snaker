@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/erishforG/snaker.svg?branch=master)](https://travis-ci.org/erishforG/snaker)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/erishforG/snaker/blob/master/LICENSE)
 
-![snaker_image](https://github.com/erishforG/snaker/server_image.jpeg)
+![snaker_image](https://github.com/erishforG/snaker/blob/master/server_image.jpeg)
 
 Snaker is a Python based simple url shortner the Django framework.
 
