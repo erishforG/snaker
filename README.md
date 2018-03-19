@@ -15,18 +15,18 @@ Snaker is a Python based simple url shortener the Django framework.
 
 ## Usage
 
-1) download the pacakge or fork the package or git clone https://github.com/erishforG/snaker.git
+1) download the package or fork the package or git clone https://github.com/erishforG/snaker.git
 
-2) python3 pip install -r requeriments.txt
+2) python3 pip install -r requirements.txt
 
-2) vi ~/snaker/snaker/settings.py to change each values (*specific information will be bellow)
+2) vi ~/snaker/snaker/settings.py to change each values (*specific information is provided below)
 
-3) python3 manage.py run server
+3) python3 manage.py runserver
 
 4) visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ## Documentation
-### how does snaker works
+### how does snaker work
 
 1) When you register 'LONG URL', snaker will match with 'HASH' code created by itself or oneself who uses snaker. 
 
