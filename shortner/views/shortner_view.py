@@ -132,8 +132,6 @@ def url_change_controller(request, hash):
 
             links = url_link.objects.raw('SELECT *, (SELECT name FROM media WHERE id = url_link.media_id) as mediaName FROM url_link WHERE url_id = ' + str(result_url['id']))
 
-            log_data = {}
-
             if result_url is not None:
                 #user agent
                 ua_string = request.META['HTTP_USER_AGENT']
