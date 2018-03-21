@@ -107,13 +107,13 @@ def url_list_download(request):
                 'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC')
             create_urls_excel(urls)
 
-            filepath = os.path.join(settings.BASE_DIR, '{}_urls.xlsx'.format(datetime.date.today()))
-            filename = os.path.basename(filepath)
+            file_path = os.path.join(settings.BASE_DIR, '{}_urls.xlsx'.format(datetime.date.today()))
+            filename = os.path.basename(file_path)
 
-            with open(filepath, 'rb') as f:
+            with open(file_path, 'rb') as f:
                 response = HttpResponse(f, content_type='application/vnd.ms-excel')
                 response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
-                os.remove(filepath)
+                os.remove(file_path)
                 return response
 
 
