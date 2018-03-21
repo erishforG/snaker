@@ -44,8 +44,11 @@ def url_list_controller(request):
         return HttpResponseForbidden()
 
     if request.method == 'GET':
-        page = request.GET.get("page")
+        page = int(request.GET.get("page"))
         tags = request.GET.get("tags")
+
+        urls = None
+        last_page = int(url.objects.count() / 20) + 1
 
         if tags is not None and page is not None:
             tag_query_str = tags_to_query_str(tags)
@@ -57,16 +60,22 @@ def url_list_controller(request):
                     'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url WHERE tags LIKE "' + tag_query_str + '" ORDER BY id DESC LIMIT ' + urls_range)
 
             last_page = int(len(list(tmp_url)) / 20) + 1
-            page = int(page)
-            return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page,
-                                                         'list_range': url_list_range(page, last_page)})
 
         if page is None and tags is None:
             try:
                 urls = url.objects.raw(
                     'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC')
-                last_page = int(url.objects.count() / 20) + 1
-                return render(request, 'url_list.html', {'urls': urls, 'page': None, 'last_page': last_page, 'list_range':url_list_range(page, last_page)})
+            except Exception as e:
+                print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                print(''.join('* ' + line for line in lines))
+
+        if page is not None:
+            try:
+                urls_range = "{} , {}".format((page - 1) * 20, 20)
+                urls = url.objects.raw(
+                    'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC LIMIT ' + urls_range)
             except Exception as e:
                 print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -78,29 +87,13 @@ def url_list_controller(request):
                 tag_query_str = tags_to_query_str(tags)
                 urls = url.objects.raw(
                     'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url WHERE tags LIKE "' + tag_query_str + '" ORDER BY id DESC')
-                last_page = int(url.objects.count() / 20) + 1
-                return render(request, 'url_list.html', {'urls': urls, 'page': None, 'last_page': last_page,
-                                                         'list_range': url_list_range(page, last_page)})
             except Exception as e:
                 print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
                 print(''.join('* ' + line for line in lines))
 
-        if page is not None:
-            try:
-                page = int(page)
-                urls_range = "{} , {}".format((page - 1) * 20, 20)
-                last_page = int(url.objects.count() / 20) + 1
-                urls = url.objects.raw(
-                    'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC LIMIT ' + urls_range)
-                return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page,
-                                                         'list_range': url_list_range(page, last_page)})
-            except Exception as e:
-                # print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                print(''.join('* ' + line for line in lines))
+        return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page, 'list_range': url_list_range(page, last_page)})
 
 
 @api_view(['GET'])
