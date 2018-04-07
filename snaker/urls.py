@@ -3,12 +3,17 @@ from shortner.views import shortner_view, tag_view
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
-
+from django.contrib import admin
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
 
     #admin
-    url(r'^admin/', include('session.urls')),
+    url(r'^login/$', auth_views.login, name='login'),
+
+    url(r'^logout/$', auth_views.logout, name='logout'),
+
+    url(r'^admin/', admin.site.urls),
 
     #shortner
     url(r'^urls/', include('shortner.urls')),
