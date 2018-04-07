@@ -2,10 +2,10 @@
 
 from django.shortcuts import render
 from django.http import HttpResponseForbidden
+from django.contrib.auth.decorators import login_required
 
 #rest
 from rest_framework.decorators import api_view
-
 
 #time
 import pytz
@@ -15,12 +15,9 @@ import datetime
 import sys
 import traceback
 
-
+@login_required
 @api_view(['GET'])
 def tag_list_controller(request):
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
-
     if request.method == 'GET':
         # tag 존재 할 경우 태그 필터링 ex) WHERE tags LIKE "%4%"
         # page 존재 할 경우 결과값 범위 설정 ex) LIMIT 20,40

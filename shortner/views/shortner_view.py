@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.shortcuts import redirect
 from django.http import JsonResponse
 from django.http import HttpResponseForbidden, HttpResponse
+from django.contrib.auth.decorators import login_required
 
 #log
 import sys
@@ -38,14 +39,15 @@ import xlsxwriter
 import os
 import glob
 
+@login_required
 @api_view(['GET'])
 def url_list_controller(request):
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
-
     if request.method == 'GET':
-        page = request.GET.get("page")
+        page = int(request.GET.get("page"))
         tags = request.GET.get("tags")
+
+        urls = None
+        last_page = int(url.objects.count() / 20) + 1
 
         if tags is not None and page is not None:
             tag_query_str = tags_to_query_str(tags)
@@ -57,16 +59,22 @@ def url_list_controller(request):
                     'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url WHERE tags LIKE "' + tag_query_str + '" ORDER BY id DESC LIMIT ' + urls_range)
 
             last_page = int(len(list(tmp_url)) / 20) + 1
-            page = int(page)
-            return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page,
-                                                         'list_range': url_list_range(page, last_page)})
 
         if page is None and tags is None:
             try:
                 urls = url.objects.raw(
                     'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC')
-                last_page = int(url.objects.count() / 20) + 1
-                return render(request, 'url_list.html', {'urls': urls, 'page': None, 'last_page': last_page, 'list_range':url_list_range(page, last_page)})
+            except Exception as e:
+                print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+                print(''.join('* ' + line for line in lines))
+
+        if page is not None:
+            try:
+                urls_range = "{} , {}".format((page - 1) * 20, 20)
+                urls = url.objects.raw(
+                    'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC LIMIT ' + urls_range)
             except Exception as e:
                 print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
                 exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -78,49 +86,31 @@ def url_list_controller(request):
                 tag_query_str = tags_to_query_str(tags)
                 urls = url.objects.raw(
                     'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url WHERE tags LIKE "' + tag_query_str + '" ORDER BY id DESC')
-                last_page = int(url.objects.count() / 20) + 1
-                return render(request, 'url_list.html', {'urls': urls, 'page': None, 'last_page': last_page,
-                                                         'list_range': url_list_range(page, last_page)})
             except Exception as e:
                 print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
                 print(''.join('* ' + line for line in lines))
 
-        if page is not None:
-            try:
-                page = int(page)
-                urls_range = "{} , {}".format((page - 1) * 20, 20)
-                last_page = int(url.objects.count() / 20) + 1
-                urls = url.objects.raw(
-                    'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC LIMIT ' + urls_range)
-                return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page,
-                                                         'list_range': url_list_range(page, last_page)})
-            except Exception as e:
-                # print('- url_list_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                print(''.join('* ' + line for line in lines))
+        return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page, 'list_range': url_list_range(page, last_page)})
 
 
+@login_required
 @api_view(['GET'])
 def url_list_download(request):
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
-
     if request.method == 'GET':
         try:
             urls = url.objects.raw(
                 'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC')
             create_urls_excel(urls)
 
-            filepath = os.path.join(settings.BASE_DIR, '{}_urls.xlsx'.format(datetime.date.today()))
-            filename = os.path.basename(filepath)
+            file_path = os.path.join(settings.BASE_DIR, '{}_urls.xlsx'.format(datetime.date.today()))
+            filename = os.path.basename(file_path)
 
-            with open(filepath, 'rb') as f:
+            with open(file_path, 'rb') as f:
                 response = HttpResponse(f, content_type='application/vnd.ms-excel')
                 response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
-                os.remove(filepath)
+                os.remove(file_path)
                 return response
 
 
@@ -138,8 +128,6 @@ def url_change_controller(request, hash):
             result_url = rows[0]
 
             links = url_link.objects.raw('SELECT *, (SELECT name FROM media WHERE id = url_link.media_id) as mediaName FROM url_link WHERE url_id = ' + str(result_url['id']))
-
-            log_data = {}
 
             if result_url is not None:
                 #user agent
@@ -186,7 +174,7 @@ def url_change_controller(request, hash):
             print(''.join('* ' + line for line in lines))
 
     elif request.method == 'PUT':
-        if not request.session.get('admin_id', None):
+        if not request.user.is_authenticated:
             return HttpResponseForbidden()
 
         try:
@@ -218,7 +206,7 @@ def url_change_controller(request, hash):
             print(''.join('* ' + line for line in lines))
 
     elif request.method == 'DELETE':
-        if not request.session.get('admin_id', None):
+        if not request.user.is_authenticated:
             return HttpResponseForbidden()
 
         try:
@@ -245,6 +233,7 @@ def url_change_controller(request, hash):
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
 
+@login_required
 @api_view(['GET'])
 def url_iframe_controller(request, hash):
     if request.method == 'GET':
@@ -279,10 +268,9 @@ def url_iframe_controller(request, hash):
 
         return render(request, 'url_referer.html', result_url)
 
+@login_required
 @api_view(['GET', 'POST'])
 def url_detail(request):
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
     if request.method == 'GET':
         try:
             id = request.GET['id']
@@ -334,12 +322,9 @@ def url_detail(request):
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
 
-
+@login_required
 @api_view(['GET'])
 def url_detail_controller(request, hash) :
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
-
     if request.method == 'GET':
         try :
             rows = url.objects.filter(hash=hash).values()
@@ -398,12 +383,9 @@ def url_detail_controller(request, hash) :
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
 
-
+@login_required
 @api_view(['GET'])
 def daily_source_download(request, hash):
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
-
     if request.method == 'GET':
         try:
             rows = url.objects.filter(hash=hash).values()
@@ -433,13 +415,9 @@ def daily_source_download(request, hash):
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
 
+@login_required
 @api_view(['GET'])
 def url_data_controller(request, hash):
-    # if not request.session.get('admin_id', None):
-    #     if not request.META['HTTP_AUTHORIZATION'] == '':
-    #         print("")
-    #     return HttpResponseForbidden()
-
     if request.method == 'GET':
         try :
             rows = url.objects.filter(hash=hash).values()
@@ -475,11 +453,9 @@ def url_data_controller(request, hash):
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
 
+@login_required
 @api_view(['POST', 'GET'])
 def url_create_controller(request):
-    if not request.session.get('admin_id', None):
-        return HttpResponseForbidden()
-
     if request.method == 'POST':
         try:
             rows = url.objects.filter(hash=request.data['hash']).values()
