@@ -17,11 +17,15 @@ Snaker is a Python based simple url shortner the Django framework.
 
 2) python3 pip install -r requeriments.txt
 
-2) vi ~/snaker/snaker/settings.py to change each values (*specific information will be bellow)
+3) vi ~/snaker/snaker/settings.py to change each values (*specific information will be bellow)
 
-3) python3 manage.py run server
+4) python3 manage.py migrate
 
-4) visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
+5) python3 manage.py createsuperuser
+
+6) python3 manage.py run server
+
+7) visit [http://127.0.0.1:8000](http://127.0.0.1:8000)
 
 ## Documentation
 
