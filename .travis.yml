@@ -13,7 +13,8 @@
       -DJANGO=2.0 DB=mysql
     install: # => 5
 
-      - pip install -r requirements.txt
+      - pip install pipenv
+      - pipenv install --dev
 
     before_script: # => 6
       - export DJANGO_SETTINGS_MODULE=snaker.settings
@@ -23,4 +24,5 @@
       - mysql -e 'create database test;' -u root
     script: # => 7
 
+      - pipenv shell
       - python manage.py test
