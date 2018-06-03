@@ -24,5 +24,4 @@
       - mysql -e 'create database test;' -u root
     script: # => 7
 
-      - pipenv shell
-      - python manage.py test
+      - pipenv run python manage.py test
