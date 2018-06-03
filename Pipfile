@@ -11,6 +11,7 @@ Django = "==2.0.1"
 PyMySQL = "==0.8.0"
 XlsxWriter = "==1.0.2"
 django-user_agents = "==0.3.0"
+injector = "*"
 
 [dev-packages]
 
