@@ -107,7 +107,6 @@ class shortener_service:
                 response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)
                 os.remove(file_path)
                 return response
-
         except Exception as e:
             print('- url_list_download GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -115,83 +114,89 @@ class shortener_service:
             print(''.join('* ' + line for line in lines))
 
     def redirect_url(self, request, hash):
-        try :
-            rows = url.objects.filter(hash=hash).values()
-            result_url = rows[0]
+        rows = url.objects.filter(hash=hash).values()
+        result_url = rows[0]
 
+        try:
             links = url_link.objects.raw('SELECT *, (SELECT name FROM media WHERE id = url_link.media_id) as mediaName FROM url_link WHERE url_id = ' + str(result_url['id']))
-
-            if result_url is not None:
-                #user agent
-                ua_string = request.META['HTTP_USER_AGENT']
-                user_agent = parse(ua_string)
-
-                insert_analytics = analytics(url_id=result_url['id'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), os=user_agent.os.family, browser=user_agent.browser.family, device=user_agent.device.family, referer=request.META.get('HTTP_REFERER'))
-                insert_analytics.save()
-
-                if result_url['title'] is not None:
-                    result_url['title'] = settings.BASE_TITLE
-
-                for link in links :
-                    if user_agent.os.family in link.mediaName and link.link:
-                        result_url['long_url'] = link.link
-
-                if '://' not in result_url['long_url']:
-                    result_url['long_url'] = 'http://' + result_url['long_url']
-
-                if result_url['show_utm'] == 1:
-                    if '?' in result_url['long_url']:
-                        result_url['long_url'] = result_url['long_url'] + '&' + settings.UTM
-                    else :
-                        result_url['long_url'] = result_url['long_url'] + '?' + settings.UTM
-
-                print('- url_change_controller GET ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
-                print(result_url['long_url'])
-
-                if result_url['type'] == 1:
-                    return render(request, 'url_link.html', result_url)
-
-                if result_url['show_redirection'] == 0:
-                    #redirect
-                    return redirect(result_url['long_url'])
-                elif result_url['show_redirection'] == 1:
-                    #link_redirect
-                    return render(request, 'url_link_redirect.html', result_url)
-            else :
-                return Response("cannot add log to db", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         except Exception as e:
             print('- url_change_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to redirect", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if result_url is None:
+            return Response("cannot add log to db", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        #user agent
+        ua_string = request.META['HTTP_USER_AGENT']
+        user_agent = parse(ua_string)
+
+        try:
+            insert_analytics = analytics(url_id=result_url['id'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), os=user_agent.os.family, browser=user_agent.browser.family, device=user_agent.device.family, referer=request.META.get('HTTP_REFERER'))
+            insert_analytics.save()
+        except Exception as e:
+            print('- url_change_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            print(''.join('* ' + line for line in lines))
+            return Response("failed to redirect", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        if result_url['title'] is not None:
+            result_url['title'] = settings.BASE_TITLE
+
+        for link in links :
+            if user_agent.os.family in link.mediaName and link.link:
+                result_url['long_url'] = link.link
+
+        if '://' not in result_url['long_url']:
+            result_url['long_url'] = 'http://' + result_url['long_url']
+
+        if result_url['show_utm'] == 1:
+            if '?' in result_url['long_url']:
+                result_url['long_url'] = result_url['long_url'] + '&' + settings.UTM
+            else :
+                result_url['long_url'] = result_url['long_url'] + '?' + settings.UTM
+
+        print('- url_change_controller GET ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
+        print(result_url['long_url'])
+
+        if result_url['type'] == 1:
+            return render(request, 'url_link.html', result_url)
+
+        if result_url['show_redirection'] == 0:
+            #redirect
+            return redirect(result_url['long_url'])
+        else:
+            #link_redirect
+            return render(request, 'url_link_redirect.html', result_url)
 
     def post_url_info(self, request):
         try:
             rows = url.objects.filter(hash=request.data['hash']).values()
 
-            if rows and rows[0] :
+            if rows and rows[0]:
                 return Response("the hash already exists", status=status.HTTP_409_CONFLICT)
-            else :
-                if int(request.data['size_of_links']) > 0 :
-                    url.objects.create(hash=request.data['hash'], long_url=request.data['links[0][link]'], title=request.data['title'], type=request.data['type'], description=request.data['description'], show_utm=request.data['utm'], show_redirection=request.data['show_redirection'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')))
-                    inserted_url = url.objects.get(hash=request.data['hash'])
 
-                    for i in range(int(request.data['size_of_links'])):
-                        url_link.objects.create(link=request.data['links[' + str(i) + '][link]'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), media_id=int(request.data['links[' + str(i) + '][media_id]']), url_id=int(inserted_url.id))
+            if int(request.data['size_of_links']) <= 0 :
+                return Response("failed to generate url links", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                    return Response("succeed to generate url", status=status.HTTP_200_OK)
-                else :
-                    return Response("failed to generate url links", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            url.objects.create(hash=request.data['hash'], long_url=request.data['links[0][link]'], title=request.data['title'], type=request.data['type'], description=request.data['description'], show_utm=request.data['utm'], show_redirection=request.data['show_redirection'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')))
+            inserted_url = url.objects.get(hash=request.data['hash'])
+
+            for i in range(int(request.data['size_of_links'])):
+                url_link.objects.create(link=request.data['links[' + str(i) + '][link]'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), media_id=int(request.data['links[' + str(i) + '][media_id]']), url_id=int(inserted_url.id))
+
+            return Response("succeed to generate url", status=status.HTTP_200_OK)
         except Exception as e:
             print('- url_create_controller POST error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to post url info", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def put_url_info(self, request):
-        if not request.user.is_authenticated:
-            return HttpResponseForbidden()
-
         try:
             rows = url.objects.filter(hash=request.data['hash']).values()
 
@@ -219,11 +224,9 @@ class shortener_service:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to put url info", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete_url_info(self, request):
-        if not request.user.is_authenticated:
-            return HttpResponseForbidden()
-
         try:
             rows = url.objects.filter(hash=hash).values()
             if rows and rows[0] and str(rows[0]['id']) != str(request.data['id']) :
@@ -247,6 +250,7 @@ class shortener_service:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to delete url info", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_url_info(self, request, hash):
         try:
@@ -319,6 +323,7 @@ class shortener_service:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to get url info", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def redirect_iframe_url(self, request, hash):
         rows = url.objects.filter(hash=hash).values()
@@ -326,29 +331,31 @@ class shortener_service:
 
         links = url_link.objects.raw('SELECT *, (SELECT name FROM media WHERE id = url_link.media_id) as mediaName FROM url_link WHERE url_id = ' + str(result_url['id']))
 
-        if result_url is not None:
-            # user agent
-            ua_string = request.META['HTTP_USER_AGENT']
-            user_agent = parse(ua_string)
+        if result_url is None:
+            return Response("failed to redirect iframe url", status=status.HTTP_400_BAD_REQUEST)
 
-            if result_url['title'] is not None:
-                result_url['title'] = settings.BASE_TITLE
+        # user agent
+        ua_string = request.META['HTTP_USER_AGENT']
+        user_agent = parse(ua_string)
 
-            if 'http://' not in result_url['long_url'] and 'https://' not in result_url['long_url']:
-                result_url['long_url'] = 'http://' + result_url['long_url']
+        if result_url['title'] is not None:
+            result_url['title'] = settings.BASE_TITLE
 
-            for link in links:
-                if user_agent.os.family in link.mediaName:
-                    result_url['long_url'] = link.link
+        if 'http://' not in result_url['long_url'] and 'https://' not in result_url['long_url']:
+            result_url['long_url'] = 'http://' + result_url['long_url']
 
-            if result_url['show_utm'] == 1:
-                if '?' in result_url['long_url']:
-                    result_url['long_url'] = result_url['long_url'] + '&' + settings.UTM
-                else:
-                    result_url['long_url'] = result_url['long_url'] + '?' + settings.UTM
+        for link in links:
+            if user_agent.os.family in link.mediaName:
+                result_url['long_url'] = link.link
 
-            print('- url_iframe_controller GET ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
-            print(result_url['long_url'])
+        if result_url['show_utm'] == 1:
+            if '?' in result_url['long_url']:
+                result_url['long_url'] = result_url['long_url'] + '&' + settings.UTM
+            else:
+                result_url['long_url'] = result_url['long_url'] + '?' + settings.UTM
+
+        print('- url_iframe_controller GET ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
+        print(result_url['long_url'])
 
         return render(request, 'url_referer.html', result_url)
 
@@ -379,24 +386,26 @@ class shortener_service:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to download daily source", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def get_url_info_page(self, request):
-            try :
-                # media
-                result_media = media.objects.all()
+        try :
+            # media
+            result_media = media.objects.all()
 
-                # mapping
-                request_data = {}
+            # mapping
+            request_data = {}
 
-                request_data['hash'] = self._create_hash(4, 6)
-                request_data['medias'] = result_media
+            request_data['hash'] = self._create_hash(4, 6)
+            request_data['medias'] = result_media
 
-                return render(request, 'url_create.html', request_data)
-            except Exception as e:
-                print('- url_create_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
-                exc_type, exc_value, exc_traceback = sys.exc_info()
-                lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-                print(''.join('* ' + line for line in lines))
+            return render(request, 'url_create.html', request_data)
+        except Exception as e:
+            print('- url_create_controller GET error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+            print(''.join('* ' + line for line in lines))
+            return Response("failed to get url info page", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _create_hash(self, min_length, max_length):
         # generate hash
