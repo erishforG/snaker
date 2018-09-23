@@ -3,6 +3,10 @@
 from django.contrib.auth.decorators import login_required
 
 #rest
+from rest_framework import status
+from rest_framework.response import Response
+
+#rest
 from rest_framework.decorators import api_view
 
 #injector
@@ -37,12 +41,17 @@ def url_change_controller(request, hash):
         return shortener_service.redirect_url(request, hash)
 
     elif request.method == 'PUT':
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         return shortener_service.put_url_info(request)
 
     elif request.method == 'DELETE':
+        if not request.user.is_authenticated:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
         return shortener_service.delete_url_info(request)
 
-@login_required
 @api_view(['GET'])
 def url_iframe_controller(request, hash):
     if request.method == 'GET':

@@ -38,6 +38,32 @@
         </style>
 
         <script>
+            function getCookie(name) {
+                var cookieValue = null;
+
+                if (document.cookie && document.cookie != '') {
+                    var cookies = document.cookie.split(';');
+                    for (var i = 0; i < cookies.length; i++) {
+                        var cookie = jQuery.trim(cookies[i]);
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+
             $(document).ready(function() {
                 $("#url_submit").click(function(e) {
                     var hash		= $("#hash_url").val();
@@ -79,7 +105,7 @@
                             if(link.indexOf('http') == -1)
                                 link = 'http://' + link
 
-                            window.location.replace(link + '/urls/');
+                            window.location.replace(link + '/urls/?page=1');
                         })
 
                         .fail(function(xhr, textStatus, errorThrown) {
