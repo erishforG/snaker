@@ -88,37 +88,39 @@ class tag_service:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to get url tag", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post_url_tag(request, id, tag):
         try:
             save_url = url.objects.get(id=id)
 
-            if save_url:
-                arr = []
-                if save_url.tags is not None:
-                    arr = save_url.tags.split(",")
+            if not save_url:
+                return Response("failed to post url tag", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                if tag in arr:
-                    arr.remove(tag)
-                else:
-                    arr.append(tag)
-                arr.sort()
+            arr = []
+            if save_url.tags is not None:
+                arr = save_url.tags.split(",")
 
-                if len(arr):
-                    save_url.tags = ','.join(str(x) for x in arr)
-                else:
-                    save_url.tags = None
-                save_url.save()
-
-                updated_data = {"id":id, "tags":save_url.tags}
-                return JsonResponse(updated_data)
+            if tag in arr:
+                arr.remove(tag)
             else:
-                return Response("failed to get url ", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                arr.append(tag)
+            arr.sort()
+
+            if len(arr):
+                save_url.tags = ','.join(str(x) for x in arr)
+            else:
+                save_url.tags = None
+            save_url.save()
+
+            updated_data = {"id":id, "tags":save_url.tags}
+            return JsonResponse(updated_data)
         except Exception as e:
             print('- url_detail POST error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
             exc_type, exc_value, exc_traceback = sys.exc_info()
             lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
             print(''.join('* ' + line for line in lines))
+            return Response("failed to post url tag", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _url_list_range(self, current, last):
         if current < 3:
