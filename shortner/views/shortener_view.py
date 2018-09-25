@@ -19,6 +19,7 @@ from shortner.service import shortener_service, tag_service
 injector = Injector()
 
 shortener_service = injector.get(shortener_service.shortener_service)
+tag_service = injector.get(tag_service.tag_service)
 
 @login_required
 @api_view(['GET'])
