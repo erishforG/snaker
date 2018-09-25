@@ -34,7 +34,7 @@ def url_list_controller(request):
 @api_view(['GET'])
 def url_list_download_controller(request):
     if request.method == 'GET':
-        return shortener_service.download_url_list(request)
+        return shortener_service.download_url_list()
 
 @api_view(['GET', 'PUT', 'DELETE'])
 def url_change_controller(request, hash):
@@ -45,13 +45,13 @@ def url_change_controller(request, hash):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        return shortener_service.put_url_info(request)
+        return shortener_service.put_url_info(request.data.dict())
 
     elif request.method == 'DELETE':
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
-        return shortener_service.delete_url_info(request)
+        return shortener_service.delete_url_info(request.data.dict())
 
 @api_view(['GET'])
 def url_iframe_controller(request, hash):
@@ -88,7 +88,7 @@ def daily_source_controller(request, hash):
 @api_view(['POST', 'GET'])
 def url_create_controller(request):
     if request.method == 'POST':
-        return shortener_service.post_url_info(request)
+        return shortener_service.post_url_info(request.data.dict())
 
     elif request.method == 'GET':
         return shortener_service.get_url_info_page(request)

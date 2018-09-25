@@ -92,7 +92,7 @@ class shortener_service:
 
         return render(request, 'url_list.html', {'urls': urls, 'page': page, 'last_page': last_page, 'list_range': self._url_list_range(page, last_page)})
 
-    def download_url_list(self, request):
+    def download_url_list(self):
         try:
             urls = url.objects.raw(
                 'SELECT *, (SELECT count(1) FROM analytics WHERE url_id = url.id) AS count FROM url ORDER BY id DESC')
@@ -172,21 +172,21 @@ class shortener_service:
             #link_redirect
             return render(request, 'url_link_redirect.html', result_url)
 
-    def post_url_info(self, request):
+    def post_url_info(self, data):
         try:
-            rows = url.objects.filter(hash=request.data['hash']).values()
+            rows = url.objects.filter(hash=data['hash']).values()
 
             if rows and rows[0]:
                 return Response("the hash already exists", status=status.HTTP_409_CONFLICT)
 
-            if int(request.data['size_of_links']) <= 0 :
+            if int(data['size_of_links']) <= 0:
                 return Response("failed to generate url links", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            url.objects.create(hash=request.data['hash'], long_url=request.data['links[0][link]'], title=request.data['title'], type=request.data['type'], description=request.data['description'], show_utm=request.data['utm'], show_redirection=request.data['show_redirection'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')))
-            inserted_url = url.objects.get(hash=request.data['hash'])
+            url.objects.create(hash=data['hash'], long_url=data['links[0][link]'], title=data['title'], type=data['type'], description=data['description'], show_utm=data['utm'], show_redirection=data['show_redirection'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')))
+            inserted_url = url.objects.get(hash=data['hash'])
 
-            for i in range(int(request.data['size_of_links'])):
-                url_link.objects.create(link=request.data['links[' + str(i) + '][link]'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), media_id=int(request.data['links[' + str(i) + '][media_id]']), url_id=int(inserted_url.id))
+            for i in range(int(data['size_of_links'])):
+                url_link.objects.create(link=data['links[' + str(i) + '][link]'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), media_id=int(data['links[' + str(i) + '][media_id]']), url_id=int(inserted_url.id))
 
             return Response("succeed to generate url", status=status.HTTP_200_OK)
         except Exception as e:
@@ -196,26 +196,28 @@ class shortener_service:
             print(''.join('* ' + line for line in lines))
             return Response("failed to post url info", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def put_url_info(self, request):
+    def put_url_info(self, data):
         try:
-            rows = url.objects.filter(hash=request.data['hash']).values()
+            print (data)
 
-            if rows and rows[0] and str(rows[0]['id']) != str(request.data['id']) :
+            rows = url.objects.filter(hash=data['hash']).values()
+
+            if rows and rows[0] and str(rows[0]['id']) != str(data['id']) :
                 return Response("the hash already exists", status=status.HTTP_409_CONFLICT)
             else :
-                url_link.objects.filter(url_id=request.data['id']).all().delete()
+                url_link.objects.filter(url_id=data['id']).all().delete()
 
-                for i in range(int(request.data['size_of_links'])):
-                    url_link.objects.create(link=request.data['links[' + str(i) + '][link]'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), media_id=int(request.data['links[' + str(i) + '][media_id]']), url_id=int(request.data['id']))
+                for i in range(int(data['size_of_links'])):
+                    url_link.objects.create(link=data['links[' + str(i) + '][link]'], created_at=datetime.datetime.now(tz=pytz.timezone('Asia/Seoul')), media_id=int(data['links[' + str(i) + '][media_id]']), url_id=int(data['id']))
 
-                save_url = url.objects.get(id=int(request.data['id']))
-                save_url.hash = request.data['hash']
-                save_url.long_url = request.data['links[0][link]']
-                save_url.title = request.data['title']
-                save_url.type = request.data['type']
-                save_url.show_utm = request.data['utm']
-                save_url.description = request.data['description']
-                save_url.show_redirection = request.data['show_redirection']
+                save_url = url.objects.get(id=int(data['id']))
+                save_url.hash = data['hash']
+                save_url.long_url = data['links[0][link]']
+                save_url.title = data['title']
+                save_url.type = data['type']
+                save_url.show_utm = data['utm']
+                save_url.description = data['description']
+                save_url.show_redirection = data['show_redirection']
                 save_url.save()
 
                 return Response("succeed to modify url", status=status.HTTP_200_OK)
@@ -226,25 +228,26 @@ class shortener_service:
             print(''.join('* ' + line for line in lines))
             return Response("failed to put url info", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def delete_url_info(self, request):
+    def delete_url_info(self, data):
         try:
             rows = url.objects.filter(hash=hash).values()
-            if rows and rows[0] and str(rows[0]['id']) != str(request.data['id']) :
+
+            if rows and rows[0] and str(rows[0]['id']) != str(data['id']):
                 return Response("the hash already exists", status=status.HTTP_409_CONFLICT)
-            else :
-                #count delete
-                count.objects.filter(url_id=request.data['id']).all().delete()
 
-                #analytics delete
-                analytics.objects.filter(url_id=request.data['id']).all().delete()
+            #count delete
+            count.objects.filter(url_id=data['id']).all().delete()
 
-                #url link delete
-                url_link.objects.filter(url_id=request.data['id']).all().delete()
+            #analytics delete
+            analytics.objects.filter(url_id=data['id']).all().delete()
 
-                #url delete
-                url.objects.get(id=int(request.data['id'])).delete()
+            #url link delete
+            url_link.objects.filter(url_id=data['id']).all().delete()
 
-                return Response("succeed to modify url", status=status.HTTP_200_OK)
+            #url delete
+            url.objects.filter(id=data['id']).all().delete()
+
+            return Response("succeed to modify url", status=status.HTTP_200_OK)
         except Exception as e:
             print('- url_change_controller DELETE error ' + str(datetime.datetime.now(tz=pytz.timezone('Asia/Seoul'))))
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -359,7 +362,7 @@ class shortener_service:
 
         return render(request, 'url_referer.html', result_url)
 
-    def download_daily_source(self, request, hash):
+    def download_daily_source(self, hash):
         try:
             rows = url.objects.filter(hash=hash).values()
             # get url
