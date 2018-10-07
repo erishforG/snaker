@@ -22,7 +22,7 @@
                 "sha256:d96b804be412a5125a594023ec524a2010a6ffa4d408e5482ab6ff3cb97ec12f"
             ],
             "index": "pypi",
-            "version": "==2.0.1"
+            "version": "==2.0.8"
         },
         "django-graphos": {
             "hashes": [
