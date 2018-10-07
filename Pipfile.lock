@@ -56,11 +56,11 @@
         },
         "injector": {
             "hashes": [
-                "sha256:53031bdd3472108ab81e69c44cd4c2b6dad059f692b255dfd17ee7852afa58a0",
-                "sha256:f10435d05c552731a49e8221b079f4783da679b75a1ad28ebbdf06370f11c690"
+                "sha256:1413e2b1dd90c594689bc292bcc02628b969840c1292131455927f292c65e99a",
+                "sha256:d3c5a8d1ace69cfb4f97042a0c6ab50f34e05b7fa1d8a62d541c2f64abed2830"
             ],
             "index": "pypi",
-            "version": "==0.13.4"
+            "version": "==0.14.1"
         },
         "pymysql": {
             "hashes": [
@@ -72,18 +72,10 @@
         },
         "pytz": {
             "hashes": [
-                "sha256:65ae0c8101309c45772196b21b74c46b2e5d11b6275c45d251b150d5da334555",
-                "sha256:c06425302f2cf668f1bba7a0a03f3c1d34d4ebeef2c72003da308b3947c7f749"
+                "sha256:a061aa0a9e06881eb8b3b2b43f05b9439d6583c206d0a6c340ff72a7b6669053",
+                "sha256:ffb9ef1de172603304d9d2819af6f5ece76f2e85ec10692a524dd876e72bf277"
             ],
-            "version": "==2018.4"
-        },
-        "typing": {
-            "hashes": [
-                "sha256:3a887b021a77b292e151afb75323dea88a7bc1b3dfa92176cff8e44c8b68bddf",
-                "sha256:b2c689d54e1144bbcfd191b0832980a21c2dbcf7b5ff7a66248a60c90e951eb8",
-                "sha256:d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2"
-            ],
-            "version": "==3.6.4"
+            "version": "==2018.5"
         },
         "ua-parser": {
             "hashes": [
