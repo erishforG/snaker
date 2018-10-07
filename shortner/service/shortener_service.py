@@ -198,8 +198,6 @@ class shortener_service:
 
     def put_url_info(self, data):
         try:
-            print (data)
-
             rows = url.objects.filter(hash=data['hash']).values()
 
             if rows and rows[0] and str(rows[0]['id']) != str(data['id']) :
